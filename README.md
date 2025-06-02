@@ -1,133 +1,87 @@
-# Java - Demo Web Application
+# Java Demo App Kubernetes Deployment - Case Scenario
 
-This is a simple Java web app built using Spring Boot and OpenJDK 11.
+## Overview
 
-The app has been designed with cloud native demos & containers in mind, in order to provide a real working application for deployment, something more than "hello-world" but with the minimum of pre-reqs. It is not intended as a complete example of a fully functioning architecture or complex software design.
+This repository contains the Kubernetes manifests and configuration files to deploy the **Java Demo App** on a local Minikube cluster.  
 
-Typical uses would be deployment to Kubernetes, demos of Docker, CI/CD (build pipelines are provided), deployment to cloud (Azure) monitoring, auto-scaling
+## Resources
 
-The app has several basic pages accessed from the top navigation menu, some of which are only lit up when certain configuration variables are set (see 'Optional Features' below):
+- **Java Demo App Source:** [https://github.com/benc-uk/java-demoapp/](https://github.com/benc-uk/java-demoapp/)  
+- **Kubernetes:** Minikube (local cluster)  
+- **Workspace:** Local machine or VM (any cloud provider)
 
-Features:
+---
 
-- The **'Info'** page displays some system basic information (OS, platform, CPUs, IP address etc) and should detect if the app is running as a container or not.
-- The **'Tools'** page is useful in demos, and has options such a forcing CPU load (for autoscale demos), and error pages for use with App Insights
-- The **'mBeans'** page is a basic Java mBeans explorer, letting you inspect mBeans registered with the JVM and the properties they are exposing
-- Azure AD integration for user auth and sign-in (optional, see config below)
-- Azure App Insights for monitoring (optional, see config below)
+## Scenario Requirements
 
-![](https://user-images.githubusercontent.com/14982936/71443390-87cd0680-2702-11ea-857c-63d34a6e1306.png)
+### 1. Application Deployment
+- Deploy the Java Demo App on a Minikube Kubernetes cluster using deployment and service manifests.
 
-# Status
+### 2. Ingress Setup
+- Configure Ingress on Minikube to expose the application over **HTTP** and **HTTPS**.
+- Use a **self-signed SSL certificate** to enable HTTPS access.
 
-![](https://img.shields.io/github/last-commit/benc-uk/java-demoapp) ![](https://img.shields.io/github/release-date/benc-uk/java-demoapp) ![](https://img.shields.io/github/v/release/benc-uk/java-demoapp) ![](https://img.shields.io/github/commit-activity/y/benc-uk/java-demoapp)
+### 3. Health Checks
+- Implement **readiness** and **liveness probes** in the deployment manifest to monitor app health and improve reliability.
 
-Live instances:
+### 4. Optional Features
+- Configure **Horizontal Pod Autoscaler (HPA)** to dynamically scale the app based on CPU usage.
+- Set up **Ingress redirect** to automatically forward HTTP traffic to HTTPS for secure communication.
 
-[![](https://img.shields.io/website?label=Hosted%3A%20Azure%20App%20Service&up_message=online&url=https%3A%2F%2Fjava-demoapp.azurewebsites.net%2F)](https://java-demoapp.azurewebsites.net/)  
-[![](https://img.shields.io/website?label=Hosted%3A%20Kubernetes&up_message=online&url=https%3A%2F%2Fjava-demoapp.kube.benco.io%2F)](https://java-demoapp.kube.benco.io/)
+### 5. DNS and Access
+- No DNS records are required.
+- Use the `/etc/hosts` file (or `C:\Windows\System32\drivers\etc\hosts` on Windows) to map Minikube’s IP address to a hostname, e.g., `local.java-demo.com`.
 
-# Building & Running Locally
+---
 
-### Pre-reqs
+## Deployment and Setup Steps
 
-- Be using Linux, WSL or MacOS, with bash, make etc
-- [Java 11+](https://adoptopenjdk.net/installation.html) - for running locally, linting, running tests etc
-- [Docker](https://docs.docker.com/get-docker/) - for running as a container, or image build and push
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux) - for deployment to Azure
+1. **Initialize and Start Minikube**  
+   The local Kubernetes cluster was started using Minikube, providing a lightweight environment for deployment.
 
-Clone the project to any directory where you do development work
+2. **Build and Prepare Kubernetes Manifests**  
+   Kubernetes manifests for Deployment, Service, and Ingress resources were created to define application deployment, networking, and exposure.
 
-```
-git clone https://github.com/benc-uk/java-demoapp.git
-```
+3. **Deploy Application to Minikube**  
+   The manifests were applied to the cluster to deploy the Java Demo App and expose it internally via a NodePort service.
 
-### Makefile
+4. **Configure Ingress Controller**  
+   An NGINX Ingress Controller was enabled and configured on Minikube to manage inbound HTTP and HTTPS traffic.
 
-A standard GNU Make file is provided to help with running and building locally.
+5. **Set Up Self-Signed SSL Certificate**  
+   A self-signed SSL certificate was generated and configured in Kubernetes as a TLS secret to enable HTTPS on the Ingress resource.
 
-```text
-help                 💬 This help message
-lint                 🔎 Lint & format, will not fix but sets exit code on error
-lint-fix             📜 Lint & format, will try to fix errors and modify code
-image                🔨 Build container image from Dockerfile
-push                 📤 Push container image to registry
-run                  🏃 Run the server locally using Python & Flask
-deploy               🚀 Deploy to Azure Web App
-undeploy             💀 Remove from Azure
-test                 🎯 Unit tests for server and frontend
-test-report          🎯 Unit tests for server and frontend (with report output)
-test-api             🚦 Run integration API tests, server must be running
-clean                🧹 Clean up project
-```
+6. **Configure Health Checks**  
+   Readiness and liveness probes were added to the Deployment manifest to ensure Kubernetes can monitor the application’s health status effectively.
 
-Make file variables and default values, pass these in when calling `make`, e.g. `make image IMAGE_REPO=blah/foo`
+7. **Implement Horizontal Pod Autoscaling (Optional)**  
+   A Horizontal Pod Autoscaler was configured to monitor CPU usage and scale the number of pods between minimum and maximum limits.
 
-| Makefile Variable | Default              |
-| ----------------- | -------------------- |
-| IMAGE_REG         | ghcr<span>.</span>io |
-| IMAGE_REPO        | benc-uk/java-demoapp |
-| IMAGE_TAG         | latest               |
-| AZURE_RES_GROUP   | temp-demoapps        |
-| AZURE_REGION      | uksouth              |
-| AZURE_SITE_NAME   | java-{git-sha}       |
+8. **Configure HTTP to HTTPS Redirection (Optional)**  
+   Annotations were added to the Ingress resource to automatically redirect HTTP traffic to HTTPS for enhanced security.
 
-The application listens on port 8080 by default, but this can be set with the `PORT` environmental variable.
+9. **Update Hosts File for Local DNS Resolution**  
+   The Minikube IP address was mapped to a custom hostname in the local hosts file to allow easy access via `local.java-demo.com`.
 
-# Containers
+10. **Verification and Testing**  
+    The deployment was tested by accessing the application over both HTTP and HTTPS, verifying health check behavior, autoscaling functionality, and redirect rules.
 
-Public container image is [available on GitHub Container Registry](https://github.com/users/benc-uk/packages/container/package/java-demoapp)
+---
 
-Run in a container with:
+## Challenges and Resolutions
 
-```bash
-docker run --rm -it -p 8080:8080 ghcr.io/benc-uk/java-demoapp:latest
-```
+- **Minikube Tunnel Requirement for HTTPS Access:**  
+  To expose the Ingress controller's HTTPS endpoint externally, `minikube tunnel` was used to enable proper routing and load balancing on local Windows environment.
 
-Should you want to build your own container, use `make image` and the above variables to customise the name & tag.
+- **Git Repository Management:**  
+  Managed branch naming and remote URL configuration carefully to push Kubernetes manifests and related files to the designated GitHub repository.
 
-# Kubernetes
+- **Windows Environment Specific Adjustments:**  
+  Special care was taken to update Windows hosts file and run Minikube tunnel as a background service for seamless local development.
 
-The app can easily be deployed to Kubernetes using Helm, see [deploy/kubernetes/readme.md](deploy/kubernetes/readme.md) for details
+---
 
-# Optional Features
+## Summary
 
-## Application Insights
+This case scenario demonstrates how to deploy a Java web application on Kubernetes using Minikube, with a focus on secure ingress exposure, application health monitoring, and scalability. The setup provides a practical example suitable for interviews or demos showcasing Kubernetes deployment skills in a local development environment.
 
-If you wish to enable Azure App Insights integration set the `azure_applicationinsights_instrumentationkey` environmental variable to the relevant workspace key
-
-## User Sign-In - Azure Active Directory
-
-The _'Spring Boot Starter for Azure Active Directory'_ is included in the application and the main application nav bar has a 'User' button which when configured will sign users in via Azure AD. This is optional and not required for the app to start and run.
-
-**NOTE.** The Azure AD application must be registered with a reply/redirect URL which ends with `/login/oauth2/code/`, and have implicit grant enabled. The application must also be **granted admin consent** to several Graph APIs, this can limit which tenants the application can be registered in.
-
-See the Azure docs for more details
-https://docs.microsoft.com/en-us/azure/developer/java/spring-framework/configure-spring-boot-starter-java-app-with-azure-active-directory
-
-If running locally you can enabled Azure AD authentication by setting the following three environmental variables, before running `make run`
-
-```bash
-export azure_activedirectory_clientid='my-client-id'
-export azure_activedirectory_clientsecret='my-secret'
-export azure_activedirectory_tenantid='my-tenant'
-```
-
-# GitHub Actions CI/CD
-
-A working set of CI and CD release GitHub Actions workflows are provided `.github/workflows/`, automated builds are run in GitHub hosted runners
-
-### [GitHub Actions](https://github.com/benc-uk/python-demoapp/actions)
-
-[![](https://img.shields.io/github/workflow/status/benc-uk/java-demoapp/CI%20Build%20App)](https://github.com/benc-uk/java-demoapp/actions?query=workflow%3A%22CI+Build+App%22)
-
-[![](https://img.shields.io/github/workflow/status/benc-uk/java-demoapp/CD%20Release%20-%20AKS?label=release-kubernetes)](https://github.com/benc-uk/java-demoapp/actions?query=workflow%3A%22CD+Release+-+AKS%22)
-
-[![](https://img.shields.io/github/workflow/status/benc-uk/java-demoapp/CD%20Release%20-%20Webapp?label=release-azure)](https://github.com/benc-uk/java-demoapp/actions?query=workflow%3A%22CD+Release+-+Webapp%22)
-
-[![](https://img.shields.io/github/last-commit/benc-uk/java-demoapp)](https://github.com/benc-uk/java-demoapp/commits/master)
-
-# Updates
-
-- Mar 2021 - Version bumps, unit tests
-- Dec 2019 - First version
